@@ -9,8 +9,8 @@ import java.io.Serializable;
 @Data
 public class PostCategoriesId implements Serializable {
 
- private Integer postId;
+	private Integer postId;
 
- private Integer categoryId;
+	private Integer categoryId;
 
 }
