@@ -11,11 +11,11 @@ public class PostCategories {
  @EmbeddedId
  private PostCategoriesId id;
 
- @ManyToOne
+ @MapsId("categoryId") @ManyToOne
  @JoinColumn(name = "category_id")
  private Categories categories;
 
- @ManyToOne
+ @MapsId("postId") @ManyToOne
  @JoinColumn(name = "post_id")
  private Posts posts;
 

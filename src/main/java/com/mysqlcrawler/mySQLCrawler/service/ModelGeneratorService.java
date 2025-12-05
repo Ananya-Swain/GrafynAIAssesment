@@ -98,10 +98,13 @@ public class ModelGeneratorService {
         sb.append("@Table(name = \"").append(table.getTableName()).append("\")\n");
         sb.append("public class ").append(className).append(" {\n\n");
 
+        boolean hasManyToMany = false;
+
         if(table.getColumns().size() == table.getPrimaryKeys().size() && table.getPrimaryKeys().size() == table.getForeignKeys().size()) {
             String idClassName = generateIdClass(table);
             sb.append(" @EmbeddedId\n");
             sb.append(" private " + idClassName + " id;\n\n");
+            hasManyToMany = true;
         }
         System.out.println(className);
 
@@ -142,6 +145,9 @@ public class ModelGeneratorService {
             String fieldName = toCamelCase(fk.getReferencedTable(), false);
             String classType = toCamelCase(fk.getReferencedTable(), true);
 
+            if(hasManyToMany) {
+                sb.append(" @MapsId(\"").append(toCamelCase(fk.getColumnName(), false)).append("\")");
+            }
             sb.append(" @ManyToOne\n");
             sb.append(" @JoinColumn(name = \"").append(fk.getColumnName()).append("\")\n");
             sb.append(" private ").append(classType).append(" ").append(fieldName).append(";\n\n");
