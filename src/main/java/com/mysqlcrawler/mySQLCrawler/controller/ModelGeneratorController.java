@@ -4,12 +4,10 @@ import com.mysqlcrawler.mySQLCrawler.model.UserConfig;
 import com.mysqlcrawler.mySQLCrawler.model.GeneratedTableInfo;
 import com.mysqlcrawler.mySQLCrawler.model.TableModel;
 import com.mysqlcrawler.mySQLCrawler.service.CrawlerService;
+import com.mysqlcrawler.mySQLCrawler.service.GetJsonFileService;
 import com.mysqlcrawler.mySQLCrawler.service.ModelGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,14 +17,18 @@ import java.util.List;
 public class ModelGeneratorController {
 
     @Autowired
+    private GetJsonFileService getJsonFileService;
+
+    @Autowired
     private CrawlerService crawlerService;
 
     @Autowired
     private ModelGeneratorService modelGeneratorService;
 
-    @PostMapping("/models")
-    public String generatedModels(@RequestBody UserConfig userConfig) {
+    @GetMapping("/models")
+    public String generatedModels() {
         try {
+            UserConfig userConfig = getJsonFileService.getConfig();
             List<TableModel> schema = crawlerService.getTableSchema(userConfig);
             List<GeneratedTableInfo> generatedTableInfoList = modelGeneratorService.generatedModels(schema, userConfig);
 

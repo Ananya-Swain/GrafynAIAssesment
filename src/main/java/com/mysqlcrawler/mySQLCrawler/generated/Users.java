@@ -1,6 +1,5 @@
 package com.mysqlcrawler.mySQLCrawler.generated;
 
-import java.util.List;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,13 +25,4 @@ public class Users {
 	@Column(name = "created_at")
 	private java.sql.Timestamp createdAt;
 
-
-	@OneToMany(mappedBy = "users")
-	private List<Comments> comments;
-
-	@OneToMany(mappedBy = "users")
-	private List<Likes> likes;
-
-	@OneToMany(mappedBy = "users")
-	private List<Posts> posts;
 }

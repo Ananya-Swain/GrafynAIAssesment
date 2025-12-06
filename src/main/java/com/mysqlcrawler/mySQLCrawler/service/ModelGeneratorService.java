@@ -278,8 +278,6 @@ public class ModelGeneratorService {
         boolean generateManyToMany = userConfig.getCrawler().isDetectManyToMany();
         boolean generateOneToMany = userConfig.getCrawler().isGenerateBidirectional();
         generateRelationships(tables, generateManyToMany, generateOneToMany);
-        System.out.println("ManyToMany : " + manyToManyMapping);
-        System.out.println("OneToMany : " + oneToManyMapping);
         for(TableModel table : tables) {
             generateModel(table, generateManyToMany);
         }
@@ -300,7 +298,6 @@ public class ModelGeneratorService {
                 manyToManyMapping.put(table, joinedTables);
             }
             else if(generateOneToMany && !table.getForeignKeys().isEmpty()) {
-                System.out.println("Table Name : " + table.getTableName());
                 for(ForeignKeyModel foreignKeyModel : table.getForeignKeys()) {
                     String referencedTable = foreignKeyModel.getReferencedTable();
                     if(oneToManyMapping.containsKey(referencedTable)) {

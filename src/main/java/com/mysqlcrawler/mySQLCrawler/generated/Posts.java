@@ -1,6 +1,5 @@
 package com.mysqlcrawler.mySQLCrawler.generated;
 
-import java.util.List;
 import java.util.Set;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -34,10 +33,4 @@ public class Posts {
 
 	@ManyToMany(mappedBy = "posts")
 	private Set<Categories> categories;
-
-	@OneToMany(mappedBy = "posts")
-	private List<Comments> comments;
-
-	@OneToMany(mappedBy = "posts")
-	private List<Likes> likes;
 }

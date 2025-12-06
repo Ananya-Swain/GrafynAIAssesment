@@ -1,0 +1,13 @@
+{
+  "database": {
+    "jdbcUrl": "jdbc:mysql://localhost:3306/blogdb",
+    "username": "root",
+    "password": "Ananya19"
+  },
+  "crawler": {
+    "incluseViews": false,
+    "detectManyToMany": true,
+    "generateBidirectional": false,
+    "outputFolder": "src/main/java/com/mysqlcrawler/mySQLCrawler/generated"
+  }
+}

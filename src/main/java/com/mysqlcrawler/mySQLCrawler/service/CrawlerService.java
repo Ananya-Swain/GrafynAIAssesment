@@ -27,8 +27,6 @@ public class CrawlerService {
         String username = userConfig.getDatabase().getUsername();
         String password = userConfig.getDatabase().getPassword();
 
-        System.out.println("url : " + url + "username : " + username + "password : " + password);
-
         try(Connection conn = DriverManager.getConnection(url, username, password)) {
             DatabaseMetaData metaData = conn.getMetaData();
 //            System.out.println("catalog : " + conn.getCatalog());
