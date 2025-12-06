@@ -30,7 +30,7 @@ public class ModelGeneratorController {
             List<TableModel> schema = crawlerService.getTableSchema(userConfig);
             List<GeneratedTableInfo> generatedTableInfoList = modelGeneratorService.generatedModels(schema, userConfig);
 
-            return "Models generated successfully in: com.mysqlcrawler.mySQLCrawler.generated\n" + generatedTableInfoList;
+            return "Models generated successfully.\n" + generatedTableInfoList;
         }
         catch(IOException e) {
             e.printStackTrace();

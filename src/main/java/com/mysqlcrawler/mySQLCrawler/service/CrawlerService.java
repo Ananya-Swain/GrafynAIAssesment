@@ -108,7 +108,6 @@ public class CrawlerService {
 
 //                getResultSetMetaData(rs);
 //                System.out.println("\nPrimary Keys :\n");
-
                 while(rs.next()) {
                     primaryKeys.add(rs.getString("COLUMN_NAME"));
 //                    String pkColumn = rs.getString("COLUMN_NAME");
@@ -135,7 +134,6 @@ public class CrawlerService {
 
 //                getResultSetMetaData(rs);
 //                System.out.println("\nForeign Keys :\n");
-
                 while(rs.next()) {
                     ForeignKeyModel foreignKey = new ForeignKeyModel();
 
@@ -154,6 +152,8 @@ public class CrawlerService {
         }
         return foreignKeys;
      }
+
+     //To get indexes of each table
 
      public List<IndexModel> getIndexes(String tableName, UserConfig userConfig) throws SQLException {
 
@@ -180,24 +180,6 @@ public class CrawlerService {
         return indexModels;
      }
 
-//     @PostConstruct
-//     public void getIndexCall() throws Exception{
-//        List<String> tables = listTables(new UserConfig());
-//        for(String table : tables) {
-//            getIndexes(table.split(" ")[0]);
-//        }
-//     }
-
-//    public void printTableMetadata(String tableName) throws Exception {
-//        System.out.println("TABLE: " + tableName + "/n");
-//
-//        getColumns(tableName);
-//        getPrimaryKeys(tableName);
-//        getForeignKeys(tableName);
-//
-//        System.out.println("----------------------------------------");
-//    }
-
     //To create TableModel object for each table
 
     public TableModel buildTableModel(String tableName, UserConfig userConfig) throws Exception {
@@ -210,38 +192,6 @@ public class CrawlerService {
         table.setIndexModels(getIndexes(tableName, userConfig));
 
         return table;
-
-//        try(Connection conn = dataSource.getConnection()) {
-//            DatabaseMetaData metaData = conn.getMetaData();
-//            try(ResultSet rs = metaData.getColumns(conn.getCatalog(), null, tableName, "%")) {
-//                getResultSetMetaData(rs);
-//                while(rs.next()) {
-//                    ColumnModel col = new ColumnModel();
-//                    col.setName(rs.getString("COLUMN_NAME"));
-//                    col.setType(rs.getString("TYPE_NAME"));
-//                    col.setSize(rs.getInt("COLUMN_SIZE"));
-//                    col.setNullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable);
-//                    col.setAutoIncrement("YES".equals(rs.getString("IS_AUTOINCREMENT")));
-//                    table.getColumns().add(col);
-//                }
-//            }
-//            try(ResultSet rs = metaData.getPrimaryKeys(conn.getCatalog(), null, tableName)) {
-//                getResultSetMetaData(rs);
-//                while(rs.next()) {
-//                    table.getPrimaryKeys().add(rs.getString("COLUMN_NAME"));
-//                }
-//            }
-//            try(ResultSet rs = metaData.getImportedKeys(conn.getCatalog(), null, tableName)) {
-//                getResultSetMetaData(rs);
-//                while(rs.next()) {
-//                    ForeignKeyModel fk = new ForeignKeyModel();
-//                    fk.setColumnName(rs.getString("FKCOLUMN_NAME"));
-//                    fk.setReferencedTable(rs.getString("PKTABLE_NAME"));
-//                    fk.setReferencedColumn(rs.getString("PKCOLUMN_NAME"));
-//                    table.getForeignKeys().add(fk);
-//                }
-//            }
-//        }
     }
 
 
@@ -252,10 +202,8 @@ public class CrawlerService {
             List<String> tables = listTables(userConfig);
 
             for(String table : tables) {
-//                System.out.println(table);
                 TableModel model = buildTableModel(table.split(" ")[0], userConfig);
                 models.add(model);
-//                System.out.println(model);
             }
         }
         catch(Exception e) {

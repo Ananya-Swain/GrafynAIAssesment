@@ -17,6 +17,8 @@ public class ModelGeneratorService {
 
     List<GeneratedTableInfo> generatedModels = new ArrayList<>();
 
+    //To convert identifiers to camelcase
+
     private String toCamelCase(String name, boolean startWithUpper) {
 
         StringBuilder sb = new StringBuilder();
@@ -38,6 +40,8 @@ public class ModelGeneratorService {
         return sb.toString();
     }
 
+    //To return appropriate return type
+
     private String mapSqlType(String sqlType) {
         sqlType = sqlType.toLowerCase();
 
@@ -51,18 +55,19 @@ public class ModelGeneratorService {
         return "String";
     }
 
+    //To create each table
+
     private void saveToFile(String className, String body) throws IOException {
         String path = "src/main/java/" + basePackage.replace(".", "/") + "/" + className + ".java";
 
-//        System.out.println("basePackage : " + basePackage);
-//        System.out.println("path : " + path);
         FileWriter writer = new FileWriter(path);
         writer.write(body);
         writer.close();
     }
 
+    //To generate body for composite tables
+
     private String generateIdClass(TableModel table) throws IOException{
-//        System.out.println("generatedIdClass is called.");
 
         GeneratedTableInfo generatedTable = new GeneratedTableInfo();
 
@@ -96,6 +101,8 @@ public class ModelGeneratorService {
         return className;
     }
 
+    //To generate body for each table
+
     private void generateModel(TableModel table, boolean generateManyToMany) throws IOException {
 
         GeneratedTableInfo generatedTable = new GeneratedTableInfo();
@@ -114,6 +121,8 @@ public class ModelGeneratorService {
 
         boolean hasManyToMany = false;
 
+        //To Handle composite primary key
+
         if(manyToManyMapping.containsKey(table)) {
             String idClassName = generateIdClass(table);
             sb.append("\t@EmbeddedId\n");
@@ -121,37 +130,27 @@ public class ModelGeneratorService {
             hasManyToMany = true;
         }
 
-//        if(table.getColumns().size() == table.getPrimaryKeys().size() && table.getPrimaryKeys().size() == table.getForeignKeys().size()) {
-//            String idClassName = generateIdClass(table);
-//            sb.append(" @EmbeddedId\n");
-//            sb.append(" private " + idClassName + " id;\n\n");
-//            hasManyToMany = true;
-//        }
-//        System.out.println(className);
+        //To create fields
 
         for(ColumnModel col : table.getColumns()) {
             String fieldName = toCamelCase(col.getName(), false);
             String fieldType = mapSqlType(col.getType());
             boolean isFK = false;
-//            System.out.println(fieldName);
             for(ForeignKeyModel fk : table.getForeignKeys()) {
                 String fkFieldName = toCamelCase(fk.getColumnName(), false);
-//                System.out.println("FKName : " + fkFieldName);
                 if(fieldName.equals(fkFieldName)) {
                     isFK = true;
-//                    System.out.println("***");
                     break;
                 }
-//                System.out.println("&&&");
             }
 
             if(isFK) {
-//                System.out.println("%%%");
                 continue;
             }
 
+            //To handle primary key
+
             if(table.getPrimaryKeys().contains(col.getName())) {
-//                System.out.println("^^^");
                 sb.append("\t@Id\n");
                 if(col.isAutoIncrement()) {
                     sb.append("\t@GeneratedValue(strategy = GenerationType.IDENTITY)\n");
@@ -161,6 +160,8 @@ public class ModelGeneratorService {
             sb.append("\t@Column(name = \"").append(col.getName()).append("\")\n");
             sb.append("\tprivate ").append(fieldType).append(" ").append(fieldName).append(";\n\n");
         }
+
+        //To handle foreign key
 
         for(ForeignKeyModel fk : table.getForeignKeys()) {
             String fieldName = toCamelCase(fk.getReferencedTable(), false);
@@ -173,6 +174,8 @@ public class ModelGeneratorService {
             sb.append("\t@JoinColumn(name = \"").append(fk.getColumnName()).append("\")\n");
             sb.append("\tprivate ").append(classType).append(" ").append(fieldName).append(";\n\n");
         }
+
+        //To generate many-to-many mappings
 
         if(generateManyToMany) {
 
@@ -230,6 +233,8 @@ public class ModelGeneratorService {
             }
         }
 
+        //To generate one-to-many mappings
+
         if(oneToManyMapping.containsKey(table.getTableName())) {
             List<String> referencingTables = oneToManyMapping.get(table.getTableName());
             int index = sb.indexOf("import");
@@ -240,11 +245,11 @@ public class ModelGeneratorService {
             }
         }
 
+        sb.append("}\n");
+
         generatedTable.setClassName(className);
         generatedTable.setBody(sb.toString());
         generatedModels.add(generatedTable);
-
-        sb.append("}\n");
 
         saveToFile(className, sb.toString());
     }
@@ -254,24 +259,14 @@ public class ModelGeneratorService {
         String directory = userConfig.getCrawler().getOutputFolder();
         String[] paths = directory.split("/");
 
-//        System.out.println("basePackage : " + basePackage);
         String[] basePaths = basePackage.split("\\.");
-//        for(String path : basePaths) {
-//            System.out.println(path);
-//        }
-//        System.out.println(basePaths.length - 1);
         basePaths[basePaths.length - 1] = paths[paths.length - 1];
-
         basePackage = String.join(".", basePaths);
-//        "src/main/java/" + basePackage.replace(".", "/")
 
         basePaths[basePaths.length - 1] = "";
         String parentDirectory = "src/main/java/" + String.join("/", basePaths);
         parentDirectory = parentDirectory.substring(0, parentDirectory.length() - 1);
         String newDirectory = paths[paths.length - 1];
-//        System.out.println("basePackage : " + basePackage);
-//        System.out.println("paretDirectory : " + parentDirectory);
-//        System.out.println("childDirectory : " + newDirectory);
 
         File parentDir = new File(parentDirectory);
         File newDir = new File(parentDir, newDirectory);
@@ -290,6 +285,8 @@ public class ModelGeneratorService {
         }
         return generatedModels;
     }
+
+    //To generate many-to-many and one-to-many relation maps
 
     public void generateRelationships(List<TableModel> tables, boolean generateManyToMany, boolean generateOneToMany) {
         for(TableModel table : tables) {
