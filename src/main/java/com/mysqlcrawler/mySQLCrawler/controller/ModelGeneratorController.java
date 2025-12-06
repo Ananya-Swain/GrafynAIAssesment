@@ -1,6 +1,6 @@
 package com.mysqlcrawler.mySQLCrawler.controller;
 
-import com.mysqlcrawler.mySQLCrawler.model.CrawlerConfig;
+import com.mysqlcrawler.mySQLCrawler.model.UserConfig;
 import com.mysqlcrawler.mySQLCrawler.model.GeneratedTableInfo;
 import com.mysqlcrawler.mySQLCrawler.model.TableModel;
 import com.mysqlcrawler.mySQLCrawler.service.CrawlerService;
@@ -25,10 +25,10 @@ public class ModelGeneratorController {
     private ModelGeneratorService modelGeneratorService;
 
     @PostMapping("/models")
-    public String generatedModels(@RequestBody CrawlerConfig crawlerConfig) {
+    public String generatedModels(@RequestBody UserConfig userConfig) {
         try {
-            List<TableModel> schema = crawlerService.getTableSchema(crawlerConfig);
-            List<GeneratedTableInfo> generatedTableInfoList = modelGeneratorService.generatedModels(schema, crawlerConfig);
+            List<TableModel> schema = crawlerService.getTableSchema(userConfig);
+            List<GeneratedTableInfo> generatedTableInfoList = modelGeneratorService.generatedModels(schema, userConfig);
 
             return "Models generated successfully in: com.mysqlcrawler.mySQLCrawler.generated\n" + generatedTableInfoList;
         }

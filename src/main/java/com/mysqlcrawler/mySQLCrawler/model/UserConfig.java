@@ -3,7 +3,7 @@ package com.mysqlcrawler.mySQLCrawler.model;
 import lombok.Data;
 
 @Data
-public class CrawlerConfig {
+public class UserConfig {
     private DatabaseConfig database;
     private CrawlerBehavior crawler;
 

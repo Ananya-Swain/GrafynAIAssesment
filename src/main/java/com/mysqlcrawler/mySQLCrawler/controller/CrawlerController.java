@@ -1,6 +1,6 @@
 package com.mysqlcrawler.mySQLCrawler.controller;
 
-import com.mysqlcrawler.mySQLCrawler.model.CrawlerConfig;
+import com.mysqlcrawler.mySQLCrawler.model.UserConfig;
 import com.mysqlcrawler.mySQLCrawler.service.CrawlerService;
 import com.mysqlcrawler.mySQLCrawler.model.TableModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +20,12 @@ public class CrawlerController {
     }
 
     @PostMapping("tables")
-    public List<String> getTables(@RequestBody CrawlerConfig crawlerConfig) throws Exception {
-        return crawlerService.listTables(crawlerConfig);
+    public List<String> getTables(@RequestBody UserConfig userConfig) throws Exception {
+        return crawlerService.listTables(userConfig);
     }
 
     @PostMapping("/schema")
-    public List<TableModel> getSchema(@RequestBody CrawlerConfig crawlerConfig) {
-        return crawlerService.getTableSchema(crawlerConfig);
+    public List<TableModel> getSchema(@RequestBody UserConfig userConfig) {
+        return crawlerService.getTableSchema(userConfig);
     }
 }

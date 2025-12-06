@@ -20,12 +20,12 @@ public class CrawlerService {
 
     //To get all tables from database
 
-    public List<String> listTables(CrawlerConfig crawlerConfig) throws Exception{
+    public List<String> listTables(UserConfig userConfig) throws Exception{
         List<String> tables = new ArrayList<>();
 
-        String url = crawlerConfig.getDatabase().getJdbcUrl();
-        String username = crawlerConfig.getDatabase().getUsername();
-        String password = crawlerConfig.getDatabase().getPassword();
+        String url = userConfig.getDatabase().getJdbcUrl();
+        String username = userConfig.getDatabase().getUsername();
+        String password = userConfig.getDatabase().getPassword();
 
         System.out.println("url : " + url + "username : " + username + "password : " + password);
 
@@ -33,7 +33,7 @@ public class CrawlerService {
             DatabaseMetaData metaData = conn.getMetaData();
 //            System.out.println("catalog : " + conn.getCatalog());
 
-            boolean includeViews = crawlerConfig.getCrawler().isIncludeViews();
+            boolean includeViews = userConfig.getCrawler().isIncludeViews();
 
             String[] types = includeViews ? new String[]{"TABLE", "VIEWS"} : new String[]{"TABLE"};
 
@@ -55,11 +55,11 @@ public class CrawlerService {
 
     //To get columns of each table
 
-    public List<ColumnModel> getColumns(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+    public List<ColumnModel> getColumns(String tableName, UserConfig userConfig) throws Exception {
 
-        String url = crawlerConfig.getDatabase().getJdbcUrl();
-        String username = crawlerConfig.getDatabase().getUsername();
-        String password = crawlerConfig.getDatabase().getPassword();
+        String url = userConfig.getDatabase().getJdbcUrl();
+        String username = userConfig.getDatabase().getUsername();
+        String password = userConfig.getDatabase().getPassword();
 
         List<ColumnModel> columns = new ArrayList<>();
 
@@ -94,11 +94,11 @@ public class CrawlerService {
 
     //To get primary keys of each table
 
-    public List<String> getPrimaryKeys(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+    public List<String> getPrimaryKeys(String tableName, UserConfig userConfig) throws Exception {
 
-        String url = crawlerConfig.getDatabase().getJdbcUrl();
-        String username = crawlerConfig.getDatabase().getUsername();
-        String password = crawlerConfig.getDatabase().getPassword();
+        String url = userConfig.getDatabase().getJdbcUrl();
+        String username = userConfig.getDatabase().getUsername();
+        String password = userConfig.getDatabase().getPassword();
 
         List<String> primaryKeys = new ArrayList<>();
         try(Connection conn = DriverManager.getConnection(url, username, password)) {
@@ -121,11 +121,11 @@ public class CrawlerService {
 
      //To get foreign keys of each table
 
-     public List<ForeignKeyModel> getForeignKeys(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+     public List<ForeignKeyModel> getForeignKeys(String tableName, UserConfig userConfig) throws Exception {
 
-        String url = crawlerConfig.getDatabase().getJdbcUrl();
-        String username = crawlerConfig.getDatabase().getUsername();
-        String password = crawlerConfig.getDatabase().getPassword();
+        String url = userConfig.getDatabase().getJdbcUrl();
+        String username = userConfig.getDatabase().getUsername();
+        String password = userConfig.getDatabase().getPassword();
 
         List<ForeignKeyModel> foreignKeys = new ArrayList<>();
         try(Connection conn = DriverManager.getConnection(url, username, password)) {
@@ -155,11 +155,11 @@ public class CrawlerService {
         return foreignKeys;
      }
 
-     public List<IndexModel> getIndexes(String tableName, CrawlerConfig crawlerConfig) throws SQLException {
+     public List<IndexModel> getIndexes(String tableName, UserConfig userConfig) throws SQLException {
 
-        String url = crawlerConfig.getDatabase().getJdbcUrl();
-        String username = crawlerConfig.getDatabase().getUsername();
-        String password = crawlerConfig.getDatabase().getPassword();
+        String url = userConfig.getDatabase().getJdbcUrl();
+        String username = userConfig.getDatabase().getUsername();
+        String password = userConfig.getDatabase().getPassword();
 
         List<IndexModel> indexModels = new ArrayList<>();
         try(Connection conn = DriverManager.getConnection(url, username, password)) {
@@ -182,7 +182,7 @@ public class CrawlerService {
 
 //     @PostConstruct
 //     public void getIndexCall() throws Exception{
-//        List<String> tables = listTables(new CrawlerConfig());
+//        List<String> tables = listTables(new UserConfig());
 //        for(String table : tables) {
 //            getIndexes(table.split(" ")[0]);
 //        }
@@ -200,14 +200,14 @@ public class CrawlerService {
 
     //To create TableModel object for each table
 
-    public TableModel buildTableModel(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+    public TableModel buildTableModel(String tableName, UserConfig userConfig) throws Exception {
         TableModel table = new TableModel();
 
         table.setTableName(tableName);
-        table.setColumns(getColumns(tableName, crawlerConfig));
-        table.setPrimaryKeys(getPrimaryKeys(tableName, crawlerConfig));
-        table.setForeignKeys(getForeignKeys(tableName, crawlerConfig));
-        table.setIndexModels(getIndexes(tableName, crawlerConfig));
+        table.setColumns(getColumns(tableName, userConfig));
+        table.setPrimaryKeys(getPrimaryKeys(tableName, userConfig));
+        table.setForeignKeys(getForeignKeys(tableName, userConfig));
+        table.setIndexModels(getIndexes(tableName, userConfig));
 
         return table;
 
@@ -245,15 +245,15 @@ public class CrawlerService {
     }
 
 
-    public List<TableModel> getTableSchema(CrawlerConfig crawlerConfig){
+    public List<TableModel> getTableSchema(UserConfig userConfig){
         List<TableModel> models = new ArrayList<>();
 
         try {
-            List<String> tables = listTables(crawlerConfig);
+            List<String> tables = listTables(userConfig);
 
             for(String table : tables) {
 //                System.out.println(table);
-                TableModel model = buildTableModel(table.split(" ")[0], crawlerConfig);
+                TableModel model = buildTableModel(table.split(" ")[0], userConfig);
                 models.add(model);
 //                System.out.println(model);
             }

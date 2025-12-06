@@ -249,9 +249,9 @@ public class ModelGeneratorService {
         saveToFile(className, sb.toString());
     }
 
-    public List<GeneratedTableInfo> generatedModels(List<TableModel> tables, CrawlerConfig crawlerConfig) throws IOException {
+    public List<GeneratedTableInfo> generatedModels(List<TableModel> tables, UserConfig userConfig) throws IOException {
 
-        String directory = crawlerConfig.getCrawler().getOutputFolder();
+        String directory = userConfig.getCrawler().getOutputFolder();
         String[] paths = directory.split("/");
 
 //        System.out.println("basePackage : " + basePackage);
@@ -280,8 +280,8 @@ public class ModelGeneratorService {
 //            System.out.println(newDirectory + "Directory created successfully.");
         }
 
-        boolean generateManyToMany = crawlerConfig.getCrawler().isDetectManyToMany();
-        boolean generateOneToMany = crawlerConfig.getCrawler().isGenerateBidirectional();
+        boolean generateManyToMany = userConfig.getCrawler().isDetectManyToMany();
+        boolean generateOneToMany = userConfig.getCrawler().isGenerateBidirectional();
         generateRelationships(tables, generateManyToMany, generateOneToMany);
         System.out.println("ManyToMany : " + manyToManyMapping);
         System.out.println("OneToMany : " + oneToManyMapping);
