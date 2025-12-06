@@ -1,10 +1,13 @@
 package com.mysqlcrawler.mySQLCrawler.controller;
 
+import com.mysqlcrawler.mySQLCrawler.model.CrawlerConfig;
+import com.mysqlcrawler.mySQLCrawler.model.GeneratedTableInfo;
 import com.mysqlcrawler.mySQLCrawler.model.TableModel;
 import com.mysqlcrawler.mySQLCrawler.service.CrawlerService;
 import com.mysqlcrawler.mySQLCrawler.service.ModelGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,12 +25,12 @@ public class ModelGeneratorController {
     private ModelGeneratorService modelGeneratorService;
 
     @PostMapping("/models")
-    public String generatedModels() {
+    public String generatedModels(@RequestBody CrawlerConfig crawlerConfig) {
         try {
-            List<TableModel> schema = crawlerService.getTableSchema();
-            modelGeneratorService.generatedModels(schema);
+            List<TableModel> schema = crawlerService.getTableSchema(crawlerConfig);
+            List<GeneratedTableInfo> generatedTableInfoList = modelGeneratorService.generatedModels(schema, crawlerConfig);
 
-            return "Models generated successfully in: com.mysqlcrawler.mySQLCrawler.generated";
+            return "Models generated successfully in: com.mysqlcrawler.mySQLCrawler.generated\n" + generatedTableInfoList;
         }
         catch(IOException e) {
             e.printStackTrace();

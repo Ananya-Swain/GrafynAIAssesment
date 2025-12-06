@@ -1,8 +1,6 @@
 package com.mysqlcrawler.mySQLCrawler.service;
 
-import com.mysqlcrawler.mySQLCrawler.model.ColumnModel;
-import com.mysqlcrawler.mySQLCrawler.model.ForeignKeyModel;
-import com.mysqlcrawler.mySQLCrawler.model.IndexModel;
+import com.mysqlcrawler.mySQLCrawler.model.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,24 +10,34 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mysqlcrawler.mySQLCrawler.model.TableModel;
-
 @Service
 public class CrawlerService {
+
 
     @Autowired
     private DataSource dataSource;
 
+
     //To get all tables from database
 
-    public List<String> listTables() throws Exception{
+    public List<String> listTables(CrawlerConfig crawlerConfig) throws Exception{
         List<String> tables = new ArrayList<>();
 
-        try(Connection conn = dataSource.getConnection()) {
+        String url = crawlerConfig.getDatabase().getJdbcUrl();
+        String username = crawlerConfig.getDatabase().getUsername();
+        String password = crawlerConfig.getDatabase().getPassword();
+
+        System.out.println("url : " + url + "username : " + username + "password : " + password);
+
+        try(Connection conn = DriverManager.getConnection(url, username, password)) {
             DatabaseMetaData metaData = conn.getMetaData();
 //            System.out.println("catalog : " + conn.getCatalog());
 
-            try(ResultSet rs = metaData.getTables(conn.getCatalog(), null, "%", new String[] {"TABLE", "VIEW"})) {
+            boolean includeViews = crawlerConfig.getCrawler().isIncludeViews();
+
+            String[] types = includeViews ? new String[]{"TABLE", "VIEWS"} : new String[]{"TABLE"};
+
+            try(ResultSet rs = metaData.getTables(conn.getCatalog(), null, "%", types)) {
                 while(rs.next()) {
                     String tableName = rs.getString("TABLE_NAME");
                     String tableType = rs.getString("TABLE_TYPE");
@@ -47,11 +55,15 @@ public class CrawlerService {
 
     //To get columns of each table
 
-    public List<ColumnModel> getColumns(String tableName) throws Exception {
+    public List<ColumnModel> getColumns(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+
+        String url = crawlerConfig.getDatabase().getJdbcUrl();
+        String username = crawlerConfig.getDatabase().getUsername();
+        String password = crawlerConfig.getDatabase().getPassword();
 
         List<ColumnModel> columns = new ArrayList<>();
 
-        try(Connection conn = dataSource.getConnection()) {
+        try(Connection conn = DriverManager.getConnection(url, username, password)) {
             DatabaseMetaData metaData = conn.getMetaData();
 
             try(ResultSet rs = metaData.getColumns(conn.getCatalog(), null, tableName, "%")) {
@@ -82,9 +94,14 @@ public class CrawlerService {
 
     //To get primary keys of each table
 
-    public List<String> getPrimaryKeys(String tableName) throws Exception {
+    public List<String> getPrimaryKeys(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+
+        String url = crawlerConfig.getDatabase().getJdbcUrl();
+        String username = crawlerConfig.getDatabase().getUsername();
+        String password = crawlerConfig.getDatabase().getPassword();
+
         List<String> primaryKeys = new ArrayList<>();
-        try(Connection conn = dataSource.getConnection()) {
+        try(Connection conn = DriverManager.getConnection(url, username, password)) {
             DatabaseMetaData metaData = conn.getMetaData();
 
             try(ResultSet rs = metaData.getPrimaryKeys(conn.getCatalog(), null, tableName)) {
@@ -104,9 +121,14 @@ public class CrawlerService {
 
      //To get foreign keys of each table
 
-     public List<ForeignKeyModel> getForeignKeys(String tableName) throws Exception {
+     public List<ForeignKeyModel> getForeignKeys(String tableName, CrawlerConfig crawlerConfig) throws Exception {
+
+        String url = crawlerConfig.getDatabase().getJdbcUrl();
+        String username = crawlerConfig.getDatabase().getUsername();
+        String password = crawlerConfig.getDatabase().getPassword();
+
         List<ForeignKeyModel> foreignKeys = new ArrayList<>();
-        try(Connection conn = dataSource.getConnection()) {
+        try(Connection conn = DriverManager.getConnection(url, username, password)) {
             DatabaseMetaData metaData = conn.getMetaData();
 
             try(ResultSet rs = metaData.getImportedKeys(conn.getCatalog(), null, tableName)) {
@@ -133,9 +155,14 @@ public class CrawlerService {
         return foreignKeys;
      }
 
-     public List<IndexModel> getIndexes(String tableName) throws SQLException {
+     public List<IndexModel> getIndexes(String tableName, CrawlerConfig crawlerConfig) throws SQLException {
+
+        String url = crawlerConfig.getDatabase().getJdbcUrl();
+        String username = crawlerConfig.getDatabase().getUsername();
+        String password = crawlerConfig.getDatabase().getPassword();
+
         List<IndexModel> indexModels = new ArrayList<>();
-        try(Connection conn = dataSource.getConnection()) {
+        try(Connection conn = DriverManager.getConnection(url, username, password)) {
             DatabaseMetaData metadata = conn.getMetaData();
             try(ResultSet rs = metadata.getIndexInfo(conn.getCatalog(), null, tableName, false, false)) {
 //                getResultSetMetaData(rs);
@@ -153,13 +180,13 @@ public class CrawlerService {
         return indexModels;
      }
 
-     @PostConstruct
-     public void getIndexCall() throws Exception{
-        List<String> tables = listTables();
-        for(String table : tables) {
-            getIndexes(table.split(" ")[0]);
-        }
-     }
+//     @PostConstruct
+//     public void getIndexCall() throws Exception{
+//        List<String> tables = listTables(new CrawlerConfig());
+//        for(String table : tables) {
+//            getIndexes(table.split(" ")[0]);
+//        }
+//     }
 
 //    public void printTableMetadata(String tableName) throws Exception {
 //        System.out.println("TABLE: " + tableName + "/n");
@@ -173,14 +200,14 @@ public class CrawlerService {
 
     //To create TableModel object for each table
 
-    public TableModel buildTableModel(String tableName) throws Exception {
+    public TableModel buildTableModel(String tableName, CrawlerConfig crawlerConfig) throws Exception {
         TableModel table = new TableModel();
 
         table.setTableName(tableName);
-        table.setColumns(getColumns(tableName));
-        table.setPrimaryKeys(getPrimaryKeys(tableName));
-        table.setForeignKeys(getForeignKeys(tableName));
-        table.setIndexModels(getIndexes(tableName));
+        table.setColumns(getColumns(tableName, crawlerConfig));
+        table.setPrimaryKeys(getPrimaryKeys(tableName, crawlerConfig));
+        table.setForeignKeys(getForeignKeys(tableName, crawlerConfig));
+        table.setIndexModels(getIndexes(tableName, crawlerConfig));
 
         return table;
 
@@ -218,15 +245,15 @@ public class CrawlerService {
     }
 
 
-    public List<TableModel> getTableSchema(){
+    public List<TableModel> getTableSchema(CrawlerConfig crawlerConfig){
         List<TableModel> models = new ArrayList<>();
 
         try {
-            List<String> tables = listTables();
+            List<String> tables = listTables(crawlerConfig);
 
             for(String table : tables) {
 //                System.out.println(table);
-                TableModel model = buildTableModel(table.split(" ")[0]);
+                TableModel model = buildTableModel(table.split(" ")[0], crawlerConfig);
                 models.add(model);
 //                System.out.println(model);
             }

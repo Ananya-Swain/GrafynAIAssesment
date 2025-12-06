@@ -1,23 +1,21 @@
 package com.mysqlcrawler.mySQLCrawler.service;
 
-import com.mysqlcrawler.mySQLCrawler.model.ColumnModel;
-import com.mysqlcrawler.mySQLCrawler.model.ForeignKeyModel;
-import com.mysqlcrawler.mySQLCrawler.model.TableModel;
+import com.mysqlcrawler.mySQLCrawler.model.*;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ModelGeneratorService {
-    private final String basePackage = "com.mysqlcrawler.mySQLCrawler.generated";
+    private String basePackage = "com.mysqlcrawler.mySQLCrawler.generated";
 
     Map<TableModel, List<String>> manyToManyMapping = new HashMap<>();
     Map<String, List<String>> oneToManyMapping = new HashMap<>();
+
+    List<GeneratedTableInfo> generatedModels = new ArrayList<>();
 
     private String toCamelCase(String name, boolean startWithUpper) {
 
@@ -64,7 +62,10 @@ public class ModelGeneratorService {
     }
 
     private String generateIdClass(TableModel table) throws IOException{
-        System.out.println("generatedIdClass is called.");
+//        System.out.println("generatedIdClass is called.");
+
+        GeneratedTableInfo generatedTable = new GeneratedTableInfo();
+
         StringBuilder sb = new StringBuilder();
         String className = toCamelCase(table.getTableName(), true) + "Id";
 
@@ -86,12 +87,18 @@ public class ModelGeneratorService {
 
         sb.append("}");
 
+        generatedTable.setClassName(className);
+        generatedTable.setBody(sb.toString());
+        generatedModels.add(generatedTable);
+
         saveToFile(className, sb.toString());
 
         return className;
     }
 
-    private void generateModel(TableModel table) throws IOException {
+    private void generateModel(TableModel table, boolean generateManyToMany) throws IOException {
+
+        GeneratedTableInfo generatedTable = new GeneratedTableInfo();
 
         String className = toCamelCase(table.getTableName(), true);
         StringBuilder sb = new StringBuilder();
@@ -99,7 +106,6 @@ public class ModelGeneratorService {
 
         sb.append("import jakarta.persistence.*;\n");
         sb.append("import lombok.Data;\n\n");
-        sb.append("import java.util.List;\n\n");
 
         sb.append("@Data\n");
         sb.append("@Entity\n");
@@ -168,79 +174,124 @@ public class ModelGeneratorService {
             sb.append("\tprivate ").append(classType).append(" ").append(fieldName).append(";\n\n");
         }
 
-        for(Map.Entry<TableModel, List<String>> entry : manyToManyMapping.entrySet()) {
-            if(entry.getValue().get(0).equals(table.getTableName())) {
-                sb.append("\t@ManyToMany\n");
-                sb.append("\t@JoinTable(\n");
-                sb.append("\t\tname = \"").append(entry.getKey().getTableName()).append("\",\n");
-                String joinColumn;
-                String joinTable;
-                String inverseJoinColumn;
-                String inverseJoinTable;
-                if(entry.getKey().getForeignKeys().get(0).getReferencedTable().equals(table.getTableName())) {
-                    joinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
-                    joinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
-                    inverseJoinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
-                    inverseJoinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
-                }
-                else {
-                    joinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
-                    joinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
-                    inverseJoinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
-                    inverseJoinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
-                }
-                sb.append("\t\tjoinColumns = @JoinColumn(name = \"").append(joinColumn).append("\"),\n");
-                sb.append("\t\tinverseJoinColumns = @JoinColumn(name = \"").append(inverseJoinColumn).append("\")\n");
-                sb.append("\t)\n");
+        if(generateManyToMany) {
 
-                sb.append("\tprivate List<").append(toCamelCase(inverseJoinTable, true)).append("> ").append(inverseJoinTable).append(";\n");
-            }
+            for (Map.Entry<TableModel, List<String>> entry : manyToManyMapping.entrySet()) {
+                if (entry.getValue().get(0).equals(table.getTableName())) {
+                    sb.append("\t@ManyToMany\n");
+                    sb.append("\t@JoinTable(\n");
+                    sb.append("\t\tname = \"").append(entry.getKey().getTableName()).append("\",\n");
+                    String joinColumn;
+                    String joinTable;
+                    String inverseJoinColumn;
+                    String inverseJoinTable;
+                    if (entry.getKey().getForeignKeys().get(0).getReferencedTable().equals(table.getTableName())) {
+                        joinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
+                        joinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
+                        inverseJoinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
+                        inverseJoinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
+                    } else {
+                        joinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
+                        joinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
+                        inverseJoinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
+                        inverseJoinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
+                    }
 
-            if(entry.getValue().get(1).equals(table.getTableName())) {
-                String joinColumn;
-                String joinTable;
-                String inverseJoinColumn;
-                String inverseJoinTable;
-                if(entry.getKey().getForeignKeys().get(0).getReferencedTable().equals(table.getTableName())) {
-                    joinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
-                    joinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
-                    inverseJoinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
-                    inverseJoinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
+                    int index = sb.indexOf("import");
+                    sb.insert(index, "import java.util.Set;\n");
+                    sb.append("\t\tjoinColumns = @JoinColumn(name = \"").append(joinColumn).append("\"),\n");
+                    sb.append("\t\tinverseJoinColumns = @JoinColumn(name = \"").append(inverseJoinColumn).append("\")\n");
+                    sb.append("\t)\n");
+
+                    sb.append("\tprivate Set<").append(toCamelCase(inverseJoinTable, true)).append("> ").append(inverseJoinTable).append(";\n");
                 }
-                else {
-                    joinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
-                    joinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
-                    inverseJoinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
-                    inverseJoinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
+
+                if (entry.getValue().get(1).equals(table.getTableName())) {
+                    String joinColumn;
+                    String joinTable;
+                    String inverseJoinColumn;
+                    String inverseJoinTable;
+                    if (entry.getKey().getForeignKeys().get(0).getReferencedTable().equals(table.getTableName())) {
+                        joinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
+                        joinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
+                        inverseJoinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
+                        inverseJoinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
+                    } else {
+                        joinColumn = entry.getKey().getForeignKeys().get(1).getColumnName();
+                        joinTable = entry.getKey().getForeignKeys().get(1).getReferencedTable();
+                        inverseJoinColumn = entry.getKey().getForeignKeys().get(0).getColumnName();
+                        inverseJoinTable = entry.getKey().getForeignKeys().get(0).getReferencedTable();
+                    }
+                    int index = sb.indexOf("import");
+                    sb.insert(index, "import java.util.Set;\n");
+                    sb.append("\n\t@ManyToMany(mappedBy = \"").append(joinTable).append("\")\n");
+                    sb.append("\tprivate Set<").append(toCamelCase(inverseJoinTable, true)).append("> ").append(inverseJoinTable).append(";\n");
                 }
-                sb.append("\n\t@ManyToMany(mappedBy = \"").append(joinTable).append("\")\n");
-                sb.append("\tprivate List<").append(toCamelCase(inverseJoinTable, true)).append("> ").append(inverseJoinTable).append(";\n");
             }
         }
 
         if(oneToManyMapping.containsKey(table.getTableName())) {
             List<String> referencingTables = oneToManyMapping.get(table.getTableName());
+            int index = sb.indexOf("import");
+            sb.insert(index, "import java.util.List;\n");
             for(String referencingTable : referencingTables) {
-                sb.append("\t@OneToMany(mappedBy = \"").append(table.getTableName()).append("\")\n");
+                sb.append("\n\t@OneToMany(mappedBy = \"").append(table.getTableName()).append("\")\n");
                 sb.append("\tprivate List<").append(toCamelCase(referencingTable, true)).append("> ").append(referencingTable).append(";\n");
             }
         }
+
+        generatedTable.setClassName(className);
+        generatedTable.setBody(sb.toString());
+        generatedModels.add(generatedTable);
 
         sb.append("}\n");
 
         saveToFile(className, sb.toString());
     }
 
-    public void generatedModels(List<TableModel> tables) throws IOException {
-        generateRelationships(tables);
+    public List<GeneratedTableInfo> generatedModels(List<TableModel> tables, CrawlerConfig crawlerConfig) throws IOException {
+
+        String directory = crawlerConfig.getCrawler().getOutputFolder();
+        String[] paths = directory.split("/");
+
+//        System.out.println("basePackage : " + basePackage);
+        String[] basePaths = basePackage.split("\\.");
+//        for(String path : basePaths) {
+//            System.out.println(path);
+//        }
+//        System.out.println(basePaths.length - 1);
+        basePaths[basePaths.length - 1] = paths[paths.length - 1];
+
+        basePackage = String.join(".", basePaths);
+//        "src/main/java/" + basePackage.replace(".", "/")
+
+        basePaths[basePaths.length - 1] = "";
+        String parentDirectory = "src/main/java/" + String.join("/", basePaths);
+        parentDirectory = parentDirectory.substring(0, parentDirectory.length() - 1);
+        String newDirectory = paths[paths.length - 1];
+//        System.out.println("basePackage : " + basePackage);
+//        System.out.println("paretDirectory : " + parentDirectory);
+//        System.out.println("childDirectory : " + newDirectory);
+
+        File parentDir = new File(parentDirectory);
+        File newDir = new File(parentDir, newDirectory);
+
+        if(newDir.mkdirs()) {
+//            System.out.println(newDirectory + "Directory created successfully.");
+        }
+
+        boolean generateManyToMany = crawlerConfig.getCrawler().isDetectManyToMany();
+        boolean generateOneToMany = crawlerConfig.getCrawler().isGenerateBidirectional();
+        generateRelationships(tables, generateManyToMany, generateOneToMany);
         System.out.println("ManyToMany : " + manyToManyMapping);
         System.out.println("OneToMany : " + oneToManyMapping);
         for(TableModel table : tables) {
-            generateModel(table);
+            generateModel(table, generateManyToMany);
         }
+        return generatedModels;
     }
 
-    public void generateRelationships(List<TableModel> tables) {
+    public void generateRelationships(List<TableModel> tables, boolean generateManyToMany, boolean generateOneToMany) {
         for(TableModel table : tables) {
             if(table.getColumns().size() == 2 && table.getPrimaryKeys().size() == 2 && table.getForeignKeys().size() == 2) {
                 String table1 = table.getForeignKeys().get(0).getReferencedTable();
@@ -251,11 +302,13 @@ public class ModelGeneratorService {
 
                 manyToManyMapping.put(table, joinedTables);
             }
-            else if(table.getForeignKeys().size() > 0) {
+            else if(generateOneToMany && !table.getForeignKeys().isEmpty()) {
+                System.out.println("Table Name : " + table.getTableName());
                 for(ForeignKeyModel foreignKeyModel : table.getForeignKeys()) {
                     String referencedTable = foreignKeyModel.getReferencedTable();
                     if(oneToManyMapping.containsKey(referencedTable)) {
-                        oneToManyMapping.get(referencedTable).add(table.getTableName());
+                        if(!oneToManyMapping.get(referencedTable).contains(table.getTableName()))
+                            oneToManyMapping.get(referencedTable).add(table.getTableName());
                     }
                     else {
                         List<String> referencingTable = new ArrayList<>();
@@ -266,6 +319,4 @@ public class ModelGeneratorService {
             }
         }
     }
-
-
 }
