@@ -15,7 +15,7 @@ public class GetJsonController {
     private GetJsonService getJsonService;
 
     @GetMapping("/json")
-    public UserConfig getJsonFile() {
+    public UserConfig getJson() {
         return getJsonService.getConfig();
     }
 }
