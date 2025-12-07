@@ -6,8 +6,8 @@
   },
   "crawler": {
     "incluseViews": false,
-    "detectManyToMany": true,
+    "detectManyToMany": false,
     "generateBidirectional": true,
-    "outputFolder": "src/main/java/com/mysqlcrawler/mySQLCrawler/generated"
+    "outputFolder": "src/main/java/com/mysqlcrawler/mySQLCrawler/dynamic"
   }
 }
