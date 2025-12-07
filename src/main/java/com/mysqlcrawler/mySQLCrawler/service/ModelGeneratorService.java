@@ -278,6 +278,7 @@ public class ModelGeneratorService {
         boolean generateManyToMany = userConfig.getCrawler().isDetectManyToMany();
         boolean generateOneToMany = userConfig.getCrawler().isGenerateBidirectional();
         generateRelationships(tables, generateManyToMany, generateOneToMany);
+
         for(TableModel table : tables) {
             generateModel(table, generateManyToMany);
         }

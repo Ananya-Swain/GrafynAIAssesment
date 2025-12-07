@@ -187,7 +187,7 @@ public class CrawlerService {
         table.setColumns(getColumns(tableName, userConfig));
         table.setPrimaryKeys(getPrimaryKeys(tableName, userConfig));
         table.setForeignKeys(getForeignKeys(tableName, userConfig));
-        table.setIndexModels(getIndexes(tableName, userConfig));
+        table.setIndexes(getIndexes(tableName, userConfig));
 
         return table;
     }

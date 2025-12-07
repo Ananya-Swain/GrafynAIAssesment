@@ -11,7 +11,7 @@ public class TableModel {
     private List<ColumnModel> columns = new ArrayList<>();
     private List<String> primaryKeys = new ArrayList<>();
     private List<ForeignKeyModel> foreignKeys = new ArrayList<>();
-    private List<IndexModel> indexModels = new ArrayList<>();
+    private List<IndexModel> indexes = new ArrayList<>();
 
     @Override
     public String toString() {

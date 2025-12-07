@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 @Service
-public class GetJsonFileService {
+public class GetJsonService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public UserConfig getConfig() {
